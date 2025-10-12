@@ -18,13 +18,14 @@ export class IcePlanner extends DDDSuper(I18NMixin(LitElement)) {
     return "ice-planner";
   }
 
+  /* constructor initializes the component */
   constructor() {
     super();
-    this.title = "";
+    /* this.title = ""; */
     this.t = this.t || {};
     this.t = {
       ...this.t,
-      title: "Title",
+      /* title: "Title", */
     };
     this.registerLocalization({
       context: this,
@@ -36,45 +37,113 @@ export class IcePlanner extends DDDSuper(I18NMixin(LitElement)) {
   }
 
   // Lit reactive properties
+  // Re-renders whenever these properties change
   static get properties() {
     return {
       ...super.properties,
       title: { type: String },
+      heading: { type: String },
+      count: { type: Number },
+      min: { type: Number },
+      max: { type: Number },
+      plusButton: { type: String },
+      minusButton: { type: String },
+      constant: { type: Number },
     };
-  }
-
-  // Lit scoped styles
-  static get styles() {
-    return [super.styles,
-    css`
-      :host {
-        display: block;
-        color: var(--ddd-theme-primary);
-        background-color: var(--ddd-theme-accent);
-        font-family: var(--ddd-font-navigation);
-      }
-      .wrapper {
-        margin: var(--ddd-spacing-2);
-        padding: var(--ddd-spacing-4);
-      }
-      h3 span {
-        font-size: var(--ice-planner-label-font-size, var(--ddd-font-size-s));
-      }
-    `];
   }
 
   // Lit render the HTML
   render() {
     return html`
 <div class="wrapper">
-  <h3><span>${this.t.title}:</span> ${this.title}</h3>
+  <h3><span>${this.t.title}</span> ${this.title}</h3>
   <slot></slot>
 </div>`;
   }
 
-  /**
-   * haxProperties integration via file reference
-   */
+  firstUpdated() {
+    // Ensure the page DOM (light DOM controls) is ready before
+    // trying to query and attach listeners to the number-input groups.
+    if (document.readyState === "loading") {
+      window.addEventListener("DOMContentLoaded", () => this.initIceCounter());
+    } else {
+      // If DOM already parsed, run on next tick so other elements are present.
+      setTimeout(() => this.initIceCounter(), 0);
+    }
+  }
+
+
+  initIceCounter() {
+    var el = {
+      iceCost: document.querySelector("#iceCost"),
+      slots: document.querySelector("#slots"),
+      fee: document.querySelector("#fee"),
+      coach: document.querySelector("#coachCost"),
+      jersey: document.querySelector("#jerseyCost"),
+      players: document.querySelector("#numplayers"),
+      total: document.querySelector("#totalCost"),
+      perPlayer: document.querySelector("#costPerPlayer"),
+      team: document.querySelector("#teamName"),
+      logo: document.querySelector("#teamLogo"),
+    };
+
+    const teamLogos = {
+      beavers: "https://www.shutterstock.com/image-vector/badger-logo-on-isolated-background-600w-2466779549.jpg",
+      bears: "https://t4.ftcdn.net/jpg/05/12/00/91/360_F_512009117_3LDLJIpHLKQyo05cHo9SkibkLxBZ080K.jpg",
+      penguins: "https://media.istockphoto.com/id/931877984/vector/penguin-icon.jpg?s=612x612&w=0&k=20&c=n50abm_m8cViki2PFE7aEAh_jtRjT5O_Vg_dUkorH9Y="
+    }
+
+    function calculate() {
+      var iceTotal = el.iceCost.value * el.slots.value;
+      var subtotal = iceTotal + +el.coach.value + +el.jersey.value;
+      var total = subtotal * (1 + el.fee.value / 100);
+      var players = Math.max(1, el.players.value);
+      var perPlayer = total / players;
+
+      el.total.textContent = "$" + total.toFixed(2);
+      el.perPlayer.textContent = "$" + perPlayer.toFixed(2);
+    }
+
+    function updateLogo() {
+      var selected = el.team.value;
+      el.logo.src = teamLogos[selected];
+      el.logo.alt = selected + " logo";
+    }
+
+    // Setup + / − buttons
+    var groups = document.querySelectorAll(".number-input");
+    for (var i = 0; i < groups.length; i++) {
+      (function (group) {
+        var input = group.querySelector("input");
+        var plus = group.querySelector(".plus");
+        var minus = group.querySelector(".minus");
+
+        plus.addEventListener("click", function () {
+          input.value = +input.value + 1;
+          calculate();
+        });
+
+        minus.addEventListener("click", function () {
+          if (input.id === "players" && +input.value <= 1) return;
+          input.value = Math.max(0, +input.value - 1);
+          calculate();
+        });
+
+        input.addEventListener("input", calculate);
+      })(groups[i]);
+    }
+
+    // Update logo when team changes
+    el.team.addEventListener("change", function () {
+      updateLogo();
+      calculate();
+    });
+
+    // Initialize
+    updateLogo();
+    calculate();
+  };
+
   static get haxProperties() {
     return new URL(`./lib/${this.tag}.haxProperties.json`, import.meta.url)
       .href;
@@ -82,3 +151,8 @@ export class IcePlanner extends DDDSuper(I18NMixin(LitElement)) {
 }
 
 globalThis.customElements.define(IcePlanner.tag, IcePlanner);
+
+
+/**
+ * haxProperties integration via file reference
+ */
