@@ -72,7 +72,7 @@ export class IcePlanner extends DDDSuper(I18NMixin(LitElement)) {
     }
   }
 
-
+  // defines the variables using querySelector
   initIceCounter() {
     var el = {
       iceCost: document.querySelector("#iceCost"),
@@ -86,24 +86,25 @@ export class IcePlanner extends DDDSuper(I18NMixin(LitElement)) {
       team: document.querySelector("#teamName"),
       logo: document.querySelector("#teamLogo"),
     };
-
+    // defines the team logos for each selection
     const teamLogos = {
       beavers: "https://www.shutterstock.com/image-vector/badger-logo-on-isolated-background-600w-2466779549.jpg",
       bears: "https://t4.ftcdn.net/jpg/05/12/00/91/360_F_512009117_3LDLJIpHLKQyo05cHo9SkibkLxBZ080K.jpg",
       penguins: "https://media.istockphoto.com/id/931877984/vector/penguin-icon.jpg?s=612x612&w=0&k=20&c=n50abm_m8cViki2PFE7aEAh_jtRjT5O_Vg_dUkorH9Y="
     }
-
+    // calculates the total cost and the per player cost
     function calculate() {
-      var iceTotal = el.iceCost.value * el.slots.value;
-      var subtotal = iceTotal + +el.coach.value + +el.jersey.value;
-      var total = subtotal * (1 + el.fee.value / 100);
-      var players = Math.max(1, el.players.value);
-      var perPlayer = total / players;
+      var iceTotal = el.iceCost.value * el.slots.value; // ice cost * hours
+      var subtotal = iceTotal + +el.coach.value + +el.jersey.value; // ice total + coach + jersey
+      var total = subtotal * (1 + el.fee.value / 100); // adds the fee percentage
+      var players = Math.max(1, el.players.value); // div by num of players, at least 1
+      var perPlayer = total / players; // cost per player
 
-      el.total.textContent = "$" + total.toFixed(2);
-      el.perPlayer.textContent = "$" + perPlayer.toFixed(2);
+      el.total.textContent = "$" + total.toFixed(2);   // total cost, 2 decimals
+      el.perPlayer.textContent = "$" + perPlayer.toFixed(2); // cost per player, 2 decimals
     }
 
+    // updates the logo with the team info
     function updateLogo() {
       var selected = el.team.value;
       el.logo.src = teamLogos[selected];
@@ -118,13 +119,15 @@ export class IcePlanner extends DDDSuper(I18NMixin(LitElement)) {
         var plus = group.querySelector(".plus");
         var minus = group.querySelector(".minus");
 
+        // Event.Listener - Increase the input value by one and calls calculate function
         plus.addEventListener("click", function () {
           input.value = +input.value + 1;
           calculate();
         });
 
+        // Event.Listener - Decrease the input value by one and calls calculate function
         minus.addEventListener("click", function () {
-          if (input.id === "players" && +input.value <= 1) return;
+          if (input.id === "players" && +input.value <= 1) return; // players must be at least one
           input.value = Math.max(0, +input.value - 1);
           calculate();
         });
@@ -139,11 +142,12 @@ export class IcePlanner extends DDDSuper(I18NMixin(LitElement)) {
       calculate();
     });
 
-    // Initialize
+    // Initialize the functions
     updateLogo();
     calculate();
   };
 
+  // call HaxProperties - haxProperties.json
   static get haxProperties() {
     return new URL(`./lib/${this.tag}.haxProperties.json`, import.meta.url)
       .href;
