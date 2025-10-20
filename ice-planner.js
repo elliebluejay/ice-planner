@@ -1,162 +1,159 @@
-/**
- * Copyright 2025 elliebluejay
- * @license Apache-2.0, see LICENSE for full text.
- */
 import { LitElement, html, css } from "lit";
 import { DDDSuper } from "@haxtheweb/d-d-d/d-d-d.js";
 import { I18NMixin } from "@haxtheweb/i18n-manager/lib/I18NMixin.js";
 
-/**
- * `ice-planner`
- * 
- * @demo index.html
- * @element ice-planner
- */
 export class IcePlanner extends DDDSuper(I18NMixin(LitElement)) {
-
   static get tag() {
     return "ice-planner";
   }
 
-  /* constructor initializes the component */
-  constructor() {
-    super();
-    /* this.title = ""; */
-    this.t = this.t || {};
-    this.t = {
-      ...this.t,
-      /* title: "Title", */
-    };
-    this.registerLocalization({
-      context: this,
-      localesPath:
-        new URL("./locales/ice-planner.ar.json", import.meta.url).href +
-        "/../",
-      locales: ["ar", "es", "hi", "zh"],
-    });
-  }
-
-  // Lit reactive properties
-  // Re-renders whenever these properties change
   static get properties() {
     return {
       ...super.properties,
-      title: { type: String },
-      heading: { type: String },
-      count: { type: Number },
-      min: { type: Number },
-      max: { type: Number },
-      plusButton: { type: String },
-      minusButton: { type: String },
-      constant: { type: Number },
+      iceCost: { type: Number },
+      slots: { type: Number },
+      fee: { type: Number },
+      coach: { type: Number },
+      jersey: { type: Number },
+      players: { type: Number },
+      total: { type: Number },
+      perPlayer: { type: Number },
+      jerseyTotal: { type: Number },
+      team: { type: String },
+
+      logo: { type: String },
     };
   }
 
-  // Lit render the HTML
-  render() {
-    return html`
-<div class="wrapper">
-  <h3><span>${this.t.title}</span> ${this.title}</h3>
-  <slot></slot>
-</div>`;
+  constructor() {
+    super();
+    this.iceCost = 300;
+    this.slots = 50;
+    this.fee = 2;
+    this.coach = 3000;
+    this.jersey = 0;
+    this.players = 10;
+    this.team = "beavers";
+    this.logo = "";
+    this.total = 0;
+    this.perPlayer = 0;
+    this.jerseyTotal = 0;
   }
 
   firstUpdated() {
-    // Ensure the page DOM (light DOM controls) is ready before
-    // trying to query and attach listeners to the number-input groups.
-    if (document.readyState === "loading") {
-      window.addEventListener("DOMContentLoaded", () => this.initIceCounter());
-    } else {
-      // If DOM already parsed, run on next tick so other elements are present.
-      setTimeout(() => this.initIceCounter(), 0);
-    }
+    this.initIceCounter();
   }
 
-  // defines the variables using querySelector
   initIceCounter() {
-    var el = {
+    const el = {
       iceCost: document.querySelector("#iceCost"),
       slots: document.querySelector("#slots"),
       fee: document.querySelector("#fee"),
       coach: document.querySelector("#coachCost"),
       jersey: document.querySelector("#jerseyCost"),
       players: document.querySelector("#numplayers"),
+      jerseyTotal: document.querySelector("#jerseytotal"),
       total: document.querySelector("#totalCost"),
       perPlayer: document.querySelector("#costPerPlayer"),
       team: document.querySelector("#teamName"),
       logo: document.querySelector("#teamLogo"),
     };
-    // defines the team logos for each selection
+
     const teamLogos = {
-      beavers: "https://www.shutterstock.com/image-vector/badger-logo-on-isolated-background-600w-2466779549.jpg",
+      beavers: "https://thumbs.dreamstime.com/b/beaver-icon-simple-style-white-background-79538857.jpg?w=768",
       bears: "https://t4.ftcdn.net/jpg/05/12/00/91/360_F_512009117_3LDLJIpHLKQyo05cHo9SkibkLxBZ080K.jpg",
       penguins: "https://media.istockphoto.com/id/931877984/vector/penguin-icon.jpg?s=612x612&w=0&k=20&c=n50abm_m8cViki2PFE7aEAh_jtRjT5O_Vg_dUkorH9Y="
-    }
-    // calculates the total cost and the per player cost
+    };
+
+    const toggleButton = document.getElementById("toggleDarkMode");
+    toggleButton.addEventListener("click", () => {
+      document.body.classList.toggle("dark-mode");
+    });
+
+  document.addEventListener("DOMContentLoaded", () => {
+  const toggleButton = document.getElementById("toggleDarkMode");
+
+  // Initialize button text based on localStorage or default
+  if (localStorage.getItem("darkMode") === "true") {
+    document.body.classList.add("dark-mode");
+    toggleButton.textContent = "Light Mode";
+  }
+
+  toggleButton.addEventListener("click", () => {
+    document.body.classList.toggle("dark-mode");
+    const isDark = document.body.classList.contains("dark-mode");
+    localStorage.setItem("darkMode", isDark);
+    toggleButton.textContent = isDark ? "Light Mode" : "Dark Mode";
+  });
+});
+
+
     function calculate() {
-      var iceTotal = el.iceCost.value * el.slots.value; // ice cost * hours
-      var subtotal = iceTotal + +el.coach.value + +el.jersey.value; // ice total + coach + jersey
-      var total = subtotal * (1 + el.fee.value / 100); // adds the fee percentage
-      var players = Math.max(1, el.players.value); // div by num of players, at least 1
-      var perPlayer = total / players; // cost per player
+      const iceTotal = Number(el.iceCost.value) * Number(el.slots.value);
+      const jerseyTotal = Number(el.jersey.value) * Number(el.players.value); // Total jersey cost
+      const subtotal = iceTotal + Number(el.coach.value) + jerseyTotal;
+      const total = subtotal * (1 + Number(el.fee.value) / 100);
+      const players = Math.max(1, Number(el.players.value));
+      const perPlayer = total / players;
 
-      el.total.textContent = "$" + total.toFixed(2);   // total cost, 2 decimals
-      el.perPlayer.textContent = "$" + perPlayer.toFixed(2); // cost per player, 2 decimals
+      if (el.jerseyTotal) el.jerseyTotal.textContent = "$" + jerseyTotal.toFixed(2);
+      if (el.total) el.total.textContent = "$" + total.toFixed(2);
+      if (el.perPlayer) el.perPlayer.textContent = "$" + perPlayer.toFixed(2);
     }
 
-    // updates the logo with the team info
     function updateLogo() {
-      var selected = el.team.value;
-      el.logo.src = teamLogos[selected];
+      const selected = el.team.value.toLowerCase();
+      el.logo.src = teamLogos[selected] || "";
       el.logo.alt = selected + " logo";
     }
 
-    // Setup + / − buttons
-    var groups = document.querySelectorAll(".number-input");
-    for (var i = 0; i < groups.length; i++) {
-      (function (group) {
-        var input = group.querySelector("input");
-        var plus = group.querySelector(".plus");
-        var minus = group.querySelector(".minus");
+    // Event listeners for jersey cost and number of players
+    if (el.jersey) el.jersey.addEventListener("input", calculate);
+    if (el.players) el.players.addEventListener("input", calculate);
 
-        // Event.Listener - Increase the input value by one and calls calculate function
-        plus.addEventListener("click", function () {
-          input.value = +input.value + 1;
-          calculate();
-        });
+    // + / − buttons
+    const groups = document.querySelectorAll(".number-input");
+    groups.forEach(group => {
+      const input = group.querySelector("input");
+      const plus = group.querySelector(".plus");
+      const minus = group.querySelector(".minus");
 
-        // Event.Listener - Decrease the input value by one and calls calculate function
-        minus.addEventListener("click", function () {
-          if (input.id === "players" && +input.value <= 1) return; // players must be at least one
-          input.value = Math.max(0, +input.value - 1);
-          calculate();
-        });
+      if (plus) plus.addEventListener("click", () => {
+        input.value = Number(input.value) + 1;
+        calculate();
+      });
 
-        input.addEventListener("input", calculate);
-      })(groups[i]);
-    }
+      if (minus) minus.addEventListener("click", () => {
+        if (input.id === "numplayers" && Number(input.value) <= 1) return;
+        input.value = Math.max(0, Number(input.value) - 1);
+        calculate();
+      });
 
-    // Update logo when team changes
-    el.team.addEventListener("change", function () {
+      if (input) input.addEventListener("input", calculate);
+    });
+
+    if (el.team) el.team.addEventListener("change", () => {
       updateLogo();
       calculate();
     });
 
-    // Initialize the functions
+    if (localStorage.getItem("darkMode") === "true") {
+      document.body.classList.add("dark-mode");
+    }
+
+    toggleButton.addEventListener("click", () => {
+      document.body.classList.toggle("dark-mode");
+      localStorage.setItem(
+        "darkMode",
+        document.body.classList.contains("dark-mode")
+      );
+    });
+
+
+    // Initial render
     updateLogo();
     calculate();
-  };
-
-  // call HaxProperties - haxProperties.json
-  static get haxProperties() {
-    return new URL(`./lib/${this.tag}.haxProperties.json`, import.meta.url)
-      .href;
   }
 }
 
-globalThis.customElements.define(IcePlanner.tag, IcePlanner);
-
-
-/**
- * haxProperties integration via file reference
- */
+customElements.define(IcePlanner.tag, IcePlanner);
